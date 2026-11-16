@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#FFFFFF"/>
+  <g transform="translate(-6 -14)">
+    <!-- stem and leaf -->
+    <path d="M226 170 C 226 150, 230 128, 242 108" fill="none" stroke="#000" stroke-width="16" stroke-linecap="round"/>
+    <path d="M246 132 C 262 98, 300 92, 318 100 C 306 126, 276 142, 246 132 Z" fill="#000"/>
+    <!-- apple body -->
+    <path d="M226 172 C 192 146, 112 146, 92 226 C 74 300, 116 418, 178 438 C 202 446, 214 432, 226 432 C 238 432, 250 446, 274 438 C 336 418, 378 300, 360 226 C 340 146, 260 146, 226 172 Z" fill="#000"/>
+    <!-- the hole the snake ate through -->
+    <rect x="270" y="304" width="62" height="62" rx="21" fill="#1C1C1E"/>
+    <!-- debris from the burst -->
+    <rect x="352" y="370" width="14" height="14" rx="5" fill="#000" transform="rotate(18 359 377)"/>
+    <rect x="378" y="388" width="10" height="10" rx="3.5" fill="#000" transform="rotate(-24 383 393)"/>
+    <rect x="356" y="282" width="9" height="9" rx="3" fill="#000" transform="rotate(30 360 286)"/>
+    <!-- snake: squircle segments on the game's grid, tail inside the apple -->
+    <rect x="277" y="311" width="48" height="48" rx="16" fill="#30D158" opacity=".55"/>
+    <rect x="331" y="311" width="48" height="48" rx="16" fill="#30D158" opacity=".75"/>
+    <rect x="385" y="311" width="48" height="48" rx="16" fill="#30D158" opacity=".9"/>
+    <rect x="385" y="257" width="48" height="48" rx="16" fill="#30D158"/>
+    <rect x="382" y="200" width="54" height="54" rx="18" fill="#30D158"/>
+    <!-- eyes looking up -->
+    <rect x="395" y="211" width="9" height="9" rx="4.5" fill="#000"/>
+    <rect x="414" y="211" width="9" height="9" rx="4.5" fill="#000"/>
+    <!-- next food -->
+    <circle cx="409" cy="160" r="14" fill="#FF9F0A"/>
+  </g>
+</svg>
