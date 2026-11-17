@@ -11,7 +11,6 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Snake">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <style>
 /* One screen, game first: slim top bar / phone (or full screen on phones) holding the game / slim bottom bar.
@@ -314,7 +313,6 @@ kbd {
 /* ---------- Home-screen app on an iPhone with a Dynamic Island ----------
    The game's island moves onto the hardware island: compact = exactly the cutout,
    HUD = score and best on either side of the camera, result = grows down from it. */
-:root.hw body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: #000; z-index: 9; }
 :root.hw .island {
   position: fixed; z-index: 30; top: max(0px, calc((env(safe-area-inset-top, 0px) - 37px) / 2));
   width: 126px; height: 37px; border-radius: 19px; box-shadow: none;
@@ -968,8 +966,14 @@ kbd {
     if (hw && island.parentNode !== document.body) document.body.appendChild(island);
     else if (!hw && island.parentNode !== islandHome.parent) islandHome.parent.insertBefore(island, islandHome.next);
   }
+  // iOS reports the top safe area a moment after load (and again after rotation),
+  // so re-check whenever the probe's height or the viewport changes.
+  new ResizeObserver(placeIsland).observe(probe);
   addEventListener('resize', placeIsland);
-  placeIsland();
+  addEventListener('orientationchange', () => setTimeout(placeIsland, 200));
+  addEventListener('pageshow', placeIsland);
+  if (window.visualViewport) visualViewport.addEventListener('resize', placeIsland);
+  placeIsland(); requestAnimationFrame(placeIsland); [250, 800, 2000].forEach((t) => setTimeout(placeIsland, t));
 
   setColor(color); paintSound(); applyTheme(); showBest(); resetWorld(); setState('title');
   requestAnimationFrame((T) => { lastT = T; frame(T); });
