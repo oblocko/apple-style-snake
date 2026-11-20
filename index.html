@@ -28,6 +28,7 @@
   --tile: rgba(255, 255, 255, 0.036);
   --title-veil: rgba(0, 0, 0, 0.55);
   --lift: 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+  --seg-bg: rgba(118, 118, 128, 0.24); --seg-thumb: #636366; --block: #48484A;
   --frame: linear-gradient(150deg, #5a5a5f 0%, #232325 22%, #3b3b3e 55%, #1a1a1c 78%, #48484c 100%);
   --snake: #30D158;
   --food: #FF9F0A;
@@ -41,6 +42,7 @@
   --bg: #F2F2F7; --fg: #1D1D1F; --muted: #6E6E73; --muted-2: #8E8E93; --fill: #FFFFFF; --fill-2: #E5E5EA; --fill-3: #D1D1D6;
   --board: #FFFFFF; --tile: rgba(0, 0, 0, 0.045); --title-veil: rgba(255, 255, 255, 0.62);
   --lift: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --seg-bg: rgba(118, 118, 128, 0.12); --seg-thumb: #FFFFFF; --block: #AEAEB2;
   --frame: linear-gradient(150deg, #f7f7f9 0%, #c8c8cd 22%, #ececef 55%, #b5b5ba 78%, #f0f0f2 100%);
   color-scheme: light;
 } }
@@ -48,6 +50,7 @@
   --bg: #F2F2F7; --fg: #1D1D1F; --muted: #6E6E73; --muted-2: #8E8E93; --fill: #FFFFFF; --fill-2: #E5E5EA; --fill-3: #D1D1D6;
   --board: #FFFFFF; --tile: rgba(0, 0, 0, 0.045); --title-veil: rgba(255, 255, 255, 0.62);
   --lift: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --seg-bg: rgba(118, 118, 128, 0.12); --seg-thumb: #FFFFFF; --block: #AEAEB2;
   --frame: linear-gradient(150deg, #f7f7f9 0%, #c8c8cd 22%, #ececef 55%, #b5b5ba 78%, #f0f0f2 100%);
   color-scheme: light;
 }
@@ -162,7 +165,12 @@ button { font: inherit; color: inherit; letter-spacing: inherit; border: 0; back
 .r-stats small { font-size: 12px; color: var(--muted); }
 .r-stats b { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .r-actions { display: flex; gap: 10px; width: 100%; max-width: 300px; }
-.r-actions .pill { flex: 1; }
+.r-actions .pill { flex: 1; min-width: 0; padding: 0 12px; white-space: nowrap; font-size: 15px; }
+.r-actions .share { flex: none; width: 44px; padding: 0; display: grid; place-items: center; }
+.r-actions .share svg { width: 18px; height: 18px; }
+.r-mode { margin: -8px 0 12px; font-size: 13px; color: var(--muted); }
+.r-toast { position: absolute; left: 0; right: 0; bottom: 8px; margin: 0; font-size: 12px; color: var(--snake); opacity: 0; transition: opacity .25s; }
+.r-toast.show { opacity: 1; }
 
 /* ---------- Buttons ---------- */
 .pill {
@@ -192,9 +200,21 @@ button { font: inherit; color: inherit; letter-spacing: inherit; border: 0; back
 .wordmark span { color: var(--snake); }
 .t-best { margin: 0 0 14px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .t-best b { color: var(--fg); font-weight: 600; }
-.title .pill { min-width: 132px; }
+.title .pill { min-width: 132px; margin-top: 8px; }
+.tseg {
+  position: relative; display: grid; grid-template-columns: repeat(3, 1fr); width: min(240px, 74cqmin); padding: 2px;
+  border-radius: 9px; background: var(--seg-bg);
+}
+.tthumb {
+  position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / 3); border-radius: 7px;
+  background: var(--seg-thumb); box-shadow: 0 3px 8px rgba(0, 0, 0, .12), 0 0 0 .5px rgba(0, 0, 0, .04);
+  transform: translateX(calc(var(--i, 0) * 100%)); transition: transform .35s var(--ease);
+}
+.tseg button { position: relative; z-index: 1; height: 28px; font-size: 13px; font-weight: 600; color: var(--muted); transition: color .2s; }
+.tseg button[aria-checked="true"] { color: var(--fg); }
+@container (max-height: 330px) { .t-hint { display: none; } .t-best { margin-bottom: 4px; } .tseg button { height: 24px; font-size: 12px; } }
 .title .pill.light { background: var(--fg); color: var(--bg); }
-.t-hint { margin: 12px 0 0; font-size: 12px; color: var(--muted-2); }
+.t-hint { margin: 8px 0 0; font-size: 12px; color: var(--muted-2); }
 
 .card {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(260px, calc(100% - 32px));
@@ -415,6 +435,7 @@ kbd {
             <div class="il-result" role="dialog" aria-labelledby="rEyebrow">
               <p class="r-eyebrow" id="rEyebrow">Game Over</p>
               <p class="r-score" id="rScore">0</p>
+              <p class="r-mode" id="rMode"></p>
               <div class="r-stats">
                 <div><small>Length</small><b id="rLen">3</b></div>
                 <div><small>Time</small><b id="rTime">0:00</b></div>
@@ -423,7 +444,9 @@ kbd {
               <div class="r-actions">
                 <button class="pill light" id="againBtn">Play Again</button>
                 <button class="pill dark" id="menuBtn">Menu</button>
+                <button class="pill dark share" id="shareBtn" aria-label="Share score"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M9 11.5V2.5M5.8 5.5 9 2.3l3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 8H4.5A1.5 1.5 0 0 0 3 9.5v5A1.5 1.5 0 0 0 4.5 16h9a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 13.5 8H12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
               </div>
+              <p class="r-toast" id="rToast" role="status"></p>
             </div>
           </div>
 
@@ -436,6 +459,14 @@ kbd {
               <div class="title">
                 <h1 class="wordmark">Snake<span>.</span></h1>
                 <p class="t-best">Best <b id="titleBest">0</b></p>
+                <div class="tseg" id="modeSeg" role="radiogroup" aria-label="Mode">
+                  <span class="tthumb" aria-hidden="true"></span>
+                  <button role="radio" data-v="classic">Classic</button><button role="radio" data-v="wrap">Wrap</button><button role="radio" data-v="obstacles">Blocks</button>
+                </div>
+                <div class="tseg" id="diffSeg" role="radiogroup" aria-label="Speed">
+                  <span class="tthumb" aria-hidden="true"></span>
+                  <button role="radio" data-v="easy">Easy</button><button role="radio" data-v="normal">Normal</button><button role="radio" data-v="hard">Hard</button>
+                </div>
                 <button class="pill light" id="playBtn">Play</button>
                 <p class="t-hint"><span class="key-only">Press Space to start</span><span class="touch-only">Swipe to turn</span></p>
               </div>
@@ -504,7 +535,9 @@ kbd {
     <li><span>Restart</span><span>R</span></li>
     <li><span>Back to menu</span><span>Esc</span></li>
     <li><span>Food</span><span>10 points, and a little faster</span></li>
-    <li><span>Round ends</span><span>Hitting a wall or yourself</span></li>
+    <li><span>Modes</span><span>Classic, Wrap (walls let you through), Blocks (fixed obstacles)</span></li>
+    <li><span>Speed</span><span>Easy, Normal or Hard. Each has its own best score</span></li>
+    <li><span>Round ends</span><span>Hitting a wall, a block or yourself</span></li>
   </ul>
   <button class="danger" id="resetBest">Reset Best Score</button>
 </section>
@@ -514,7 +547,11 @@ kbd {
   'use strict';
 
   /* ---------- Config ---------- */
-  const N = 15, BASE_MS = 150, MIN_MS = 80, ACCEL = 3, POINTS = 10, DEMO_MS = 125;
+  const N = 15, POINTS = 10, DEMO_MS = 125;
+  const SPEEDS = { easy: { base: 190, min: 110, accel: 3 }, normal: { base: 150, min: 80, accel: 3 }, hard: { base: 115, min: 60, accel: 2.5 } };
+  const MODES = { classic: 'Classic', wrap: 'Wrap', obstacles: 'Blocks' }, DIFFS = { easy: 'Easy', normal: 'Normal', hard: 'Hard' };
+  // Blocks mode: four corner brackets, the same every round so scores compare fairly.
+  const BLOCKS = [[3, 3], [4, 3], [3, 4], [11, 3], [10, 3], [11, 4], [3, 11], [4, 11], [3, 10], [11, 11], [10, 11], [11, 10]];
   const FOOD = '#FF9F0A', HIT = '#FF453A';
   const COLORS = [
     { id: 'green', name: 'Green', c: '#30D158' }, { id: 'mint', name: 'Mint', c: '#63E6E2' },
@@ -585,8 +622,17 @@ kbd {
   // title: demo snake plays itself behind the title | starting | running | paused | over
   let state = 'title';
   let snake = [], prev = [], dir = 'right', queue = [], food = null;
-  let score = 0, best = Math.max(0, parseInt(store.get('snake.best'), 10) || 0), roundBest = 0, bestFlashed = false;
-  let stepMs = BASE_MS, acc = 0, playMs = 0, lastT = now(), startTimer = 0, resultTimer = 0, midTimer = 0;
+  let mode = MODES[store.get('snake.mode')] ? store.get('snake.mode') : 'classic';
+  let diff = DIFFS[store.get('snake.diff')] ? store.get('snake.diff') : 'normal';
+  let speed = SPEEDS[diff], walls = new Set();
+  const bestKey = (m = mode, d = diff) => `snake.best.${m}.${d}`;
+  function loadBest() {
+    let v = store.get(bestKey());
+    if (v === null && mode === 'classic' && diff === 'normal') v = store.get('snake.best');   // best from before modes existed
+    return Math.max(0, parseInt(v, 10) || 0);
+  }
+  let score = 0, best = loadBest(), roundBest = 0, bestFlashed = false;
+  let stepMs = speed.base, acc = 0, playMs = 0, lastT = now(), startTimer = 0, resultTimer = 0, midTimer = 0;
   let color = COLORS.find((c) => c.id === store.get('snake.color')) || COLORS[0];
   const fx = { foodBorn: 0, ring: null, gulp: -1e9, dead: 0 };
 
@@ -595,17 +641,24 @@ kbd {
     const m = N >> 1;
     snake = [{ x: m - 1, y: m }, { x: m - 2, y: m }, { x: m - 3, y: m }];
     prev = snake.map((p) => ({ ...p }));
-    dir = 'right'; queue = []; stepMs = BASE_MS; acc = 0;
+    dir = 'right'; queue = []; stepMs = speed.base; acc = 0;
+    walls = new Set(mode === 'obstacles' ? BLOCKS.map(([x, y]) => y * N + x) : []);
     fx.ring = null; fx.gulp = -1e9; fx.dead = 0;
     spawnFood();
   }
   function spawnFood() {
-    const taken = new Set(snake.map((p) => p.y * N + p.x)), free = [];
+    const taken = new Set([...walls, ...snake.map((p) => p.y * N + p.x)]), free = [];
     for (let i = 0; i < N * N; i++) if (!taken.has(i)) free.push(i);
     food = free.length ? (() => { const i = free[(Math.random() * free.length) | 0]; return { x: i % N, y: (i / N) | 0 }; })() : null;
     fx.foodBorn = now();
   }
-  const blocked = (x, y, body) => x < 0 || y < 0 || x >= N || y >= N || body.some((p) => p.x === x && p.y === y);
+  // One step from (x, y); in Wrap mode the board edges connect.
+  const move = (x, y, d) => {
+    let nx = x + DIRS[d][0], ny = y + DIRS[d][1];
+    if (mode === 'wrap') { nx = (nx + N) % N; ny = (ny + N) % N; }
+    return { x: nx, y: ny };
+  };
+  const blocked = (x, y, body) => x < 0 || y < 0 || x >= N || y >= N || walls.has(y * N + x) || body.some((p) => p.x === x && p.y === y);
 
   function turn(d) {
     if (state !== 'running' && state !== 'starting') return;
@@ -617,7 +670,7 @@ kbd {
 
   function step() {
     if (queue.length) dir = queue.shift();
-    const [dx, dy] = DIRS[dir], head = { x: snake[0].x + dx, y: snake[0].y + dy };
+    const head = move(snake[0].x, snake[0].y, dir);
     const eats = !!food && head.x === food.x && head.y === food.y;
     if (blocked(head.x, head.y, eats ? snake : snake.slice(0, -1))) { end(false); return; }   // the tail moves away unless we grow
     prev = snake.map((p) => ({ ...p }));
@@ -629,12 +682,12 @@ kbd {
     fx.ring = { x: at.x, y: at.y, t: now() }; fx.gulp = now();
     if (state === 'title') { spawnFood(); if (snake.length > 22 || !food) resetWorld(); return; }
     score += POINTS;
-    stepMs = Math.max(MIN_MS, stepMs - ACCEL);
+    stepMs = Math.max(speed.min, stepMs - speed.accel);
     setNum(scoreEl, score);
     bounce(1.04);
     sound.eat();
     if (score > best) {
-      best = score; store.set('snake.best', best); setNum(bestEl, best);
+      best = score; store.set(bestKey(), best); setNum(bestEl, best);
       if (!bestFlashed && roundBest > 0) { bestFlashed = true; flashMid('New Best', 'good', 1600); sound.best(); }
     }
     updateStats();
@@ -647,7 +700,7 @@ kbd {
     const h = snake[0], body = snake.slice(0, -1);
     let pick = null, top = -Infinity;
     for (const d of Object.keys(DIRS)) {
-      const [dx, dy] = DIRS[d], x = h.x + dx, y = h.y + dy;
+      const [dx, dy] = DIRS[d], { x, y } = move(h.x, h.y, d);
       if ((DIRS[dir][0] + dx === 0 && DIRS[dir][1] + dy === 0) || blocked(x, y, body)) continue;
       const room = flood(x, y, body), dist = food ? Math.abs(food.x - x) + Math.abs(food.y - y) : 0;
       const v = (room >= snake.length ? 1000 : room * 10) - dist + Math.random() * 0.5;
@@ -656,12 +709,12 @@ kbd {
     if (pick) dir = pick;
   }
   function flood(sx, sy, body) {
-    const seen = new Uint8Array(N * N); body.forEach((p) => { seen[p.y * N + p.x] = 1; });
+    const seen = new Uint8Array(N * N); body.forEach((p) => { seen[p.y * N + p.x] = 1; }); walls.forEach((i) => { seen[i] = 1; });
     const st = [[sx, sy]]; let n = 0; seen[sy * N + sx] = 1;
     while (st.length) {
       const [x, y] = st.pop(); n++;
-      for (const [dx, dy] of Object.values(DIRS)) {
-        const nx = x + dx, ny = y + dy;
+      for (const d of Object.keys(DIRS)) {
+        const { x: nx, y: ny } = move(x, y, d);
         if (nx >= 0 && ny >= 0 && nx < N && ny < N && !seen[ny * N + nx]) { seen[ny * N + nx] = 1; st.push([nx, ny]); }
       }
     }
@@ -704,6 +757,7 @@ kbd {
     $('stTime').textContent = playing ? fmtTime(playMs) : '–';
   }
   function showBest() { setNum(bestEl, best, false); $('titleBest').textContent = best; }
+  const modeLabel = () => `${MODES[mode]} · ${DIFFS[diff]}`;
 
   function setState(s) {
     state = s; screen.dataset.state = s;
@@ -749,6 +803,8 @@ kbd {
     $('rEyebrow').textContent = won ? 'Perfect Game' : newBest ? 'New Best' : 'Game Over';
     $('rEyebrow').dataset.tone = won || newBest ? 'good' : '';
     $('rScore').textContent = score;
+    $('rMode').textContent = modeLabel();
+    $('rToast').classList.remove('show');
     $('rLen').textContent = snake.length; $('rTime').textContent = fmtTime(playMs); $('rBest').textContent = best;
     resultTimer = setTimeout(() => { if (state === 'over') island.dataset.mode = 'result'; }, reduced.matches ? 0 : 480);
   }
@@ -847,6 +903,39 @@ kbd {
   });
   sysLight.addEventListener('change', () => { if (theme === 'auto') applyTheme(); });
 
+  /* ---------- Mode and speed (title screen) ---------- */
+  function paintSegs() {
+    for (const [id, v] of [['modeSeg', mode], ['diffSeg', diff]]) {
+      const btns = [...$(id).querySelectorAll('button')];
+      $(id).style.setProperty('--i', btns.findIndex((b) => b.dataset.v === v));
+      btns.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === v)));
+    }
+  }
+  function choose(kind, v) {
+    if (state !== 'title') return;
+    if (kind === 'mode') { mode = v; store.set('snake.mode', v); } else { diff = v; speed = SPEEDS[v]; store.set('snake.diff', v); }
+    best = loadBest(); showBest(); paintSegs();
+    resetWorld(); sizeBoard();                                       // the demo restarts on the new board
+  }
+  $('modeSeg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { b.blur(); choose('mode', b.dataset.v); }));
+  $('diffSeg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { b.blur(); choose('diff', b.dataset.v); }));
+
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('rToast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+  on('shareBtn', async () => {
+    const url = location.origin + location.pathname.replace(/index\.html$/, '');
+    const text = `I scored ${score} in Snake Arcade (${modeLabel()}). Can you beat it?`;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Snake Arcade', text, url }); } catch (e) { if (e && e.name !== 'AbortError') toast('Sharing is not available here'); }
+      return;
+    }
+    try { await navigator.clipboard.writeText(`${text} ${url}`); toast('Score and link copied'); }
+    catch { toast('Could not copy. Take a screenshot instead'); }
+  });
+
   /* ---------- Help sheet ---------- */
   function openHelp() { pause(); $('backdrop').hidden = false; $('sheet').hidden = false; $('sheetDone').focus(); }
   function closeHelp() { if ($('sheet').hidden) return; $('backdrop').hidden = true; $('sheet').hidden = true; resetArm(false); }
@@ -856,7 +945,9 @@ kbd {
   function resetArm(v) { armed = v; clearTimeout(armTimer); $('resetBest').textContent = v ? 'Tap Again to Reset' : 'Reset Best Score'; if (v) armTimer = setTimeout(() => resetArm(false), 3000); }
   $('resetBest').addEventListener('click', () => {
     if (!armed) { resetArm(true); return; }
-    resetArm(false); best = 0; roundBest = 0; store.del('snake.best'); showBest();
+    resetArm(false); best = 0; roundBest = 0; store.del('snake.best');
+    for (const m in MODES) for (const d in DIFFS) store.del(bestKey(m, d));
+    showBest();
     $('resetBest').textContent = 'Best Score Cleared';
   });
 
@@ -872,6 +963,9 @@ kbd {
     const g = gridLayer.getContext('2d'), cell = (size / N) * dpr, z = cell * 0.86;
     g.fillStyle = getComputedStyle(root).getPropertyValue('--tile').trim() || 'rgba(255,255,255,0.036)';
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { rr(g, x * cell + (cell - z) / 2, y * cell + (cell - z) / 2, z, z, z * 0.3); g.fill(); }
+    g.fillStyle = getComputedStyle(root).getPropertyValue('--block').trim() || '#48484A';   // Blocks mode obstacles
+    const bz = cell * 0.82;
+    walls.forEach((i) => { rr(g, (i % N) * cell + (cell - bz) / 2, ((i / N) | 0) * cell + (cell - bz) / 2, bz, bz, bz * 0.3); g.fill(); });
   }
   new ResizeObserver(sizeBoard).observe(cv);
 
@@ -903,7 +997,8 @@ kbd {
     let hx = 0, hy = 0, hz = 0;
     for (let i = n - 1; i >= 0; i--) {                               // tail first, head on top
       const a = prev[i] || prev[prev.length - 1], b = snake[i];
-      const x = (a.x + (b.x - a.x) * prog + 0.5) * cell, y = (a.y + (b.y - a.y) * prog + 0.5) * cell;
+      const t = Math.abs(b.x - a.x) > 1 || Math.abs(b.y - a.y) > 1 ? 1 : prog;      // no sliding across the board when wrapping
+      const x = (a.x + (b.x - a.x) * t + 0.5) * cell, y = (a.y + (b.y - a.y) * t + 0.5) * cell;
       const along = n > 1 ? i / (n - 1) : 0, q = (T - fx.gulp - i * 26) / 220;
       const gulp = q > 0 && q < 1 ? 1 + 0.16 * Math.sin(Math.PI * q) : 1;   // swallow wave
       const z = cell * (i === 0 ? 0.88 : 0.8 - 0.16 * along) * gulp;
@@ -914,7 +1009,7 @@ kbd {
     }
     ctx.globalAlpha = 1;
     let [ex, ey] = DIRS[dir];
-    if (prev[0] && (snake[0].x !== prev[0].x || snake[0].y !== prev[0].y)) { ex = snake[0].x - prev[0].x; ey = snake[0].y - prev[0].y; }
+    if (prev[0] && Math.abs(snake[0].x - prev[0].x) + Math.abs(snake[0].y - prev[0].y) === 1) { ex = snake[0].x - prev[0].x; ey = snake[0].y - prev[0].y; }
     ctx.fillStyle = '#000';
     for (const s of [-1, 1]) {
       const px = hx + ex * hz * 0.17 - ey * s * hz * 0.2, py = hy + ey * hz * 0.17 + ex * s * hz * 0.2, r = hz * 0.08;
@@ -949,7 +1044,7 @@ kbd {
   // Read-only hook for automated checks.
   window.SnakeGame = Object.freeze({
     get state() { return state; }, get score() { return score; }, get best() { return best; }, get dir() { return dir; },
-    get food() { return food && { ...food }; }, get snake() { return snake.map((p) => ({ ...p })); }, get island() { return island.dataset.mode; },
+    get food() { return food && { ...food }; }, get snake() { return snake.map((p) => ({ ...p })); }, get island() { return island.dataset.mode; }, get mode() { return mode; }, get diff() { return diff; }, get stepMs() { return stepMs; },
   });
 
   /* ---------- Sit on the real Dynamic Island ----------
@@ -975,7 +1070,7 @@ kbd {
   if (window.visualViewport) visualViewport.addEventListener('resize', placeIsland);
   placeIsland(); requestAnimationFrame(placeIsland); [250, 800, 2000].forEach((t) => setTimeout(placeIsland, t));
 
-  setColor(color); paintSound(); applyTheme(); showBest(); resetWorld(); setState('title');
+  setColor(color); paintSound(); resetWorld(); applyTheme(); showBest(); paintSegs(); setState('title');
   requestAnimationFrame((T) => { lastT = T; frame(T); });
 })();
 </script>

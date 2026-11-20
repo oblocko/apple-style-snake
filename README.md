@@ -7,10 +7,13 @@ A Snake game in a single HTML file, with an iOS-style interface built around a D
 ## Features
 
 - Rounded "squircle" snake on a 15 × 15 board, with smooth movement between cells
+- Three modes: **Classic**, **Wrap** (walls let you through to the other side) and **Blocks** (fixed obstacles)
+- Three speeds: **Easy**, **Normal** and **Hard**, each with its own best score
+- Share your score from the result card (share sheet on phones, copied to the clipboard on desktop)
 - Dynamic Island HUD: live score and best score, tap to pause, and it expands into the result card
 - On an iPhone with a Dynamic Island, opened from the home screen, the HUD sits on the real island
 - Light and dark themes (Auto follows the system), six snake colors, optional sound effects
-- Best score saved in the browser
+- Best scores, mode, speed, color and theme saved in the browser
 - Works with keyboard, swipe, or the on-screen direction pad
 - Can be added to the home screen as an app
 
