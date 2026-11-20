@@ -1071,6 +1071,11 @@ kbd {
   placeIsland(); requestAnimationFrame(placeIsland); [250, 800, 2000].forEach((t) => setTimeout(placeIsland, t));
 
   setColor(color); paintSound(); resetWorld(); applyTheme(); showBest(); paintSegs(); setState('title');
+
+  // Save a copy of the game for offline play (needs https, or localhost while testing).
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
   requestAnimationFrame((T) => { lastT = T; frame(T); });
 })();
 </script>

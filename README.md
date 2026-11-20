@@ -15,7 +15,7 @@ A Snake game in a single HTML file, with an iOS-style interface built around a D
 - Light and dark themes (Auto follows the system), six snake colors, optional sound effects
 - Best scores, mode, speed, color and theme saved in the browser
 - Works with keyboard, swipe, or the on-screen direction pad
-- Can be added to the home screen as an app
+- Can be added to the home screen as an app, and plays offline once it has been opened online
 
 ## Controls
 
@@ -39,6 +39,7 @@ If you added it before, remove the old icon first so the latest version and icon
 | --- | --- |
 | `index.html` | The whole game: markup, styles and script |
 | `manifest.webmanifest`, `icons/` | Home screen name and icons |
+| `sw.js` | Service worker that keeps a copy of the game for offline play |
 | `apple-style-snake.html` | Redirects old links to the game |
 
 Snake Arcade is an independent fan project. It is not made by, affiliated with, or endorsed by Apple Inc.
